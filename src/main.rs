@@ -80,6 +80,27 @@ fn read_one_line() -> String {
     std::io::stdin().lines().next().unwrap().unwrap()
 }
 
+enum PlayerMove {
+    Attack,
+    Drink,
+}
+
+fn read_player_move() -> Option<PlayerMove> {
+    let response = read_one_line();
+    match response.to_lowercase().as_str() {
+        "a" | "attack" | "attacke" | "たたかう" | "戦う" => return Some(PlayerMove::Attack),
+        "p" | "potion" | "drink" | "trinke" => return Some(PlayerMove::Drink),
+        _ => {
+            // _ equivalent of regex /.*/, default case
+            println!("Invalid input: {}", response);
+            println!("Valid inputs are A and P");
+            return None;
+        }
+    }
+    // if one thing { return PlayerMove::Attack }
+    // else if other thing { return PlayerMove::Drink }
+}
+
 fn main() {
     let mut player = Player::new();
     let mut opponent = Opponent::new();
@@ -96,21 +117,25 @@ fn main() {
         player.print_status();
         opponent.print_status();
         println!("What will you do?");
-        let response = read_one_line();
-        if response == "A" {
-            player.attack(&mut opponent);
-        } else if response == "P" {
-            let success = player.use_potion();
-            if success {
-                println!("You used a potion.");
-            } else {
-                println!("You don't have any potions left!");
+
+        match read_player_move() {
+            Some(PlayerMove::Attack) => {
+                player.attack(&mut opponent);
+            }
+            Some(PlayerMove::Drink) => {
+                let success = player.use_potion();
+                if success {
+                    println!("You used a potion.");
+                } else {
+                    println!("You don't have any potions left!");
+                    continue;
+                }
+            }
+            None => {
+                println!("Invalid input.");
+                println!("Valid inputs are A and P");
                 continue;
             }
-        } else {
-            println!("Invalid input: {}", response);
-            println!("Valid inputs are A and P");
-            continue;
         }
 
         opponent.attack(&mut player);
