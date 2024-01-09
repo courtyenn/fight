@@ -1,19 +1,24 @@
+trait Combatant {
+    fn attack(&mut self, opponent: &mut dyn Combatant);
+    fn take_damage(&mut self, damage_amount: i32);
+}
+
 /// The protagonist of our epic MMORPG.
-struct Player {
+struct Alchemist {
     hp: i32,
     potion_count: i32,
 }
 
-impl Player {
+impl Alchemist {
     const MAXIMUM_HP: i32 = 50;
     const STARTING_POTION_COUNT: i32 = 3;
     const ATTACK_POWER: i32 = 10;
     const POTION_POWER: i32 = 30;
     /// Make a new player in the initial state.
-    fn new() -> Player {
-        return Player {
-            hp: Player::MAXIMUM_HP,
-            potion_count: Player::STARTING_POTION_COUNT,
+    fn new() -> Alchemist {
+        return Alchemist {
+            hp: Alchemist::MAXIMUM_HP,
+            potion_count: Alchemist::STARTING_POTION_COUNT,
         };
     }
     fn print_status(&self) {
@@ -21,12 +26,6 @@ impl Player {
             "Player HP: {}, potions left: {}",
             self.hp, self.potion_count
         );
-    }
-    fn take_damage(&mut self, damage_amount: i32) {
-        self.hp -= damage_amount;
-    }
-    fn attack(&mut self, opponent: &mut Opponent) {
-        opponent.take_damage(Player::ATTACK_POWER);
     }
     fn use_potion(&mut self) -> bool {
         if self.potion_count > 0 {
@@ -43,7 +42,7 @@ impl Player {
                 self.hp = Player::MAXIMUM_HP;
             }
             */
-            self.hp = (self.hp + Player::POTION_POWER).min(Player::MAXIMUM_HP);
+            self.hp = (self.hp + Alchemist::POTION_POWER).min(Alchemist::MAXIMUM_HP);
             self.potion_count -= 1;
             return true;
         } else {
@@ -52,26 +51,39 @@ impl Player {
     }
 }
 
-/// The antagonist of our epic MMORPG.
-struct Opponent {
-    hp: i32,
-}
-
-impl Opponent {
-    const MAXIMUM_HP: i32 = 100;
-    fn new() -> Opponent {
-        return Opponent {
-            hp: Opponent::MAXIMUM_HP,
-        };
-    }
+impl Combatant for Alchemist {
     fn take_damage(&mut self, damage_amount: i32) {
         self.hp -= damage_amount;
     }
-    fn attack(&mut self, player: &mut Player) {
-        player.take_damage(Player::ATTACK_POWER);
+    fn attack(&mut self, opponent: &mut dyn Combatant) {
+        opponent.take_damage(Alchemist::ATTACK_POWER);
+    }
+}
+
+/// The antagonist of our epic MMORPG.
+struct Warrior {
+    hp: i32,
+}
+
+impl Warrior {
+    const MAXIMUM_HP: i32 = 100;
+    const ATTACK_POWER: i32 = 10;
+    fn new() -> Warrior {
+        return Warrior {
+            hp: Warrior::MAXIMUM_HP,
+        };
     }
     fn print_status(&self) {
         println!("Opponent HP: {}", self.hp);
+    }
+}
+
+impl Combatant for Warrior {
+    fn take_damage(&mut self, damage_amount: i32) {
+        self.hp -= damage_amount;
+    }
+    fn attack(&mut self, opponent: &mut dyn Combatant) {
+        opponent.take_damage(Warrior::ATTACK_POWER);
     }
 }
 
@@ -92,8 +104,6 @@ fn read_player_move() -> Option<PlayerMove> {
         "p" | "potion" | "drink" | "trinke" => return Some(PlayerMove::Drink),
         _ => {
             // _ equivalent of regex /.*/, default case
-            println!("Invalid input: {}", response);
-            println!("Valid inputs are A and P");
             return None;
         }
     }
@@ -102,8 +112,8 @@ fn read_player_move() -> Option<PlayerMove> {
 }
 
 fn main() {
-    let mut player = Player::new();
-    let mut opponent = Opponent::new();
+    let mut player = Alchemist::new();
+    let mut opponent = Alchemist::new();
 
     loop {
         if player.hp <= 0 {
